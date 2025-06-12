@@ -3,6 +3,8 @@ package main
 import (
 	"encoding/json"
 	"net/http"
+	"slices"
+	"strings"
 	"sync/atomic"
 )
 
@@ -17,6 +19,7 @@ func healthz(w http.ResponseWriter, req *http.Request) {
 }
 
 func validateChirp(w http.ResponseWriter, req *http.Request) {
+	//Je pourrais DRY ce code facilement
 	type parameters struct {
 		Body string `json:"body"`
 	}
@@ -25,8 +28,8 @@ func validateChirp(w http.ResponseWriter, req *http.Request) {
 		Error string `json:"error"`
 	}
 
-	type valid struct {
-		Valid bool `json:"valid"`
+	type returnVal struct {
+		CleanedBody string `json:"cleaned_body"`
 	}
 
 	decoder := json.NewDecoder(req.Body)
@@ -46,8 +49,22 @@ func validateChirp(w http.ResponseWriter, req *http.Request) {
 	}
 
 	if len(params.Body) <= 140 {
-		respBody := valid{
-			Valid: true,
+		badWords := []string{"kerfuffle", "sharbert", "fornax"}
+		text := params.Body
+
+		splitText := strings.Split(text, " ")
+
+		for i, word := range splitText {
+			lowerWord := strings.ToLower(word)
+			if slices.Contains(badWords, lowerWord) {
+				splitText[i] = "****"
+			}
+		}
+
+		respText := strings.Join(splitText, " ")
+
+		respBody := returnVal{
+			CleanedBody: respText,
 		}
 		dat, _ := json.Marshal(respBody)
 
