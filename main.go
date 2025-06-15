@@ -1,11 +1,26 @@
 package main
 
 import (
+	"database/sql"
 	"fmt"
+	"github/breyting/http/internal/database"
 	"net/http"
+	"os"
+
+	"github.com/joho/godotenv"
+	_ "github.com/lib/pq"
 )
 
 func main() {
+	godotenv.Load()
+
+	dbURL := os.Getenv("DB_URL")
+	db, err := sql.Open("postgres", dbURL)
+	if err != nil {
+		fmt.Errorf("error connecting to the db")
+	}
+	dbQueries := database.New(db)
+
 	serveMux := http.NewServeMux()
 
 	server := &http.Server{
@@ -13,7 +28,9 @@ func main() {
 		Addr:    ":8080",
 	}
 
-	apiCfg := apiConfig{}
+	apiCfg := apiConfig{
+		queries: dbQueries,
+	}
 
 	//website
 	handler := http.StripPrefix("/app", http.FileServer(http.Dir(".")))

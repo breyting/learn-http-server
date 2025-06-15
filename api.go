@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"github/breyting/http/internal/database"
 	"net/http"
 	"slices"
 	"strings"
@@ -10,6 +11,7 @@ import (
 
 type apiConfig struct {
 	fileserverHits atomic.Int32
+	queries        *database.Queries
 }
 
 func healthz(w http.ResponseWriter, req *http.Request) {
